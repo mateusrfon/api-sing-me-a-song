@@ -82,10 +82,14 @@ export async function getRandom(req: Request, res: Response) {
 
 export async function getTop(req: Request, res: Response) {
     const amount = parseInt(req.params.amount);
+
     const request = await connection.query(`
     SELECT * FROM songs ORDER BY score DESC LIMIT $1
     `, [amount]);
+
     const songs = request.rows; //length <= amount
+
+    if (songs.length === 0) return res.sendStatus(404);
 
     res.send(songs);
 }

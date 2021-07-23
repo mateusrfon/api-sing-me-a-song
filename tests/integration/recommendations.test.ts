@@ -32,8 +32,9 @@ describe("POST /recommendations", () => {
   });
 
   it("should return status 409 for duplicate name", async () => {
-    await songFactorie.create();
     const song = songFactorie.body(true);
+    await connection.query(`INSERT INTO songs (name, "youtubeLink") VALUES ($1,$2)
+    `, [song.name, song.youtubeLink]);
 
     const response = await supertest(app).post("/recommendations").send(song);
     expect(response.status).toBe(409);
@@ -110,5 +111,33 @@ describe("POST /recommendations/random", () => {
       youtubeLink: expect.any(String), 
       score: expect.any(Number)
     }));
+  });
+});
+
+describe("POST /recommendations/top/:amount", () => {
+  it("return status 404 for no songs registered", async () => {
+    const response = await supertest(app).get("/recommendations/top/1");
+    expect(response.status).toBe(404);
+  });
+
+  it("return 3 songs when amount equals 3 and there is more than 3 songs", async () => {
+    for (let i = 0; i < 5; i++) {
+      await songFactorie.create();
+    }
+    const response = await supertest(app).get("/recommendations/top/3");
+    expect(response.body.length).toBe(3);
+  });
+
+  it("return the list of songs from score descending", async () => {
+    await connection.query(`
+    INSERT INTO songs (name, score) VALUES ('1', 50), ('2', 30), ('4', 0), ('3', 1)
+    `);
+    const response = await supertest(app).get("/recommendations/top/4");
+    const songs = response.body;
+    let ordered = true;
+    for (let i = 0; i < songs.length - 1; i++) {
+      if (songs[i].score < songs[i + 1].score) ordered = false;
+    }
+    expect(ordered).toBe(true);
   });
 });
