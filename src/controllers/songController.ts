@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { connect } from "http2";
 import Joi from "joi";
 
 import connection from "../database"; //temp
+import * as songService from "../services/songService";
 
 const songSchema = Joi.object({
     name: Joi.string().required(),
@@ -14,17 +14,10 @@ export async function add(req: Request, res: Response) {
     const songValidation = songSchema.validate(song);
     if (songValidation.error) return res.sendStatus(400);
 
-    //repositories
-    const request = await connection.query(`
-    SELECT * FROM songs WHERE name = $1
-    `, [song.name]);
+    const exists = await songService.exists(song.name);
+    if (exists) return res.sendStatus(409);
 
-    if (request.rows.length > 0) return res.sendStatus(409);
-
-    await connection.query(`
-    INSERT INTO songs (name, "youtubeLink") VALUES ($1,$2)
-    `, [song.name, song.youtubeLink]);
-    
+    await songService.create(song.name, song.link);
     res.sendStatus(201);
 };
 
