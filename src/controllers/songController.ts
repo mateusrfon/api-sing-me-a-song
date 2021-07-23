@@ -28,6 +28,34 @@ export async function add(req: Request, res: Response) {
     res.sendStatus(201);
 };
 
+export async function upVote(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+
+    const request = await connection.query(`SELECT * FROM songs WHERE id = $1`, [id]);
+    const song = request.rows[0];
+    if (!song) return res.sendStatus(404);
+
+    await connection.query(`UPDATE songs SET score = score + 1 WHERE id = $1`, [id]);
+
+    res.sendStatus(200);
+};
+
+export async function downVote(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+
+    const request = await connection.query(`SELECT * FROM songs WHERE id = $1`, [id]);
+    const song = request.rows[0];
+    if (!song) return res.sendStatus(404);
+
+    if (song.score <= -5) {
+        await connection.query(`DELETE FROM songs WHERE id = $1`, [id]);
+        return res.sendStatus(200);
+    }
+
+    await connection.query(`UPDATE songs SET score = score - 1 WHERE id = $1`, [id]);
+    res.sendStatus(200);
+}
+
 export async function getRandom(req: Request, res: Response) {
     const request = await connection.query(`SELECT * FROM songs ORDER BY score DESC`);
     const songs = request.rows;
@@ -50,4 +78,14 @@ export async function getRandom(req: Request, res: Response) {
         const randomIndex = Math.floor(Math.random() * songs.length);
         res.send(songs[randomIndex]);
     }
+}
+
+export async function getTop(req: Request, res: Response) {
+    const amount = parseInt(req.params.amount);
+    const request = await connection.query(`
+    SELECT * FROM songs ORDER BY score DESC LIMIT $1
+    `, [amount]);
+    const songs = request.rows; //length <= amount
+
+    res.send(songs);
 }
