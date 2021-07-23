@@ -1,7 +1,8 @@
 import supertest from "supertest";
 import app from "../../src/app";
-
 import connection from "../../src/database";
+
+import * as songFactorie from "./factories/songFactorie";
 
 beforeEach(async () => {
   await connection.query("DELETE FROM musics");
@@ -13,10 +14,7 @@ afterAll(() => {
 
 describe("POST /recommendations", () => {
   it("should answer with status 200 and add song for valid params", async () => {
-    const newSong = {
-        name: "Teste Song",
-        youtubeLink: "https://www.youtube.com/watch?v=4vUtXdXmnRE&ab_channel=BASSBOOSTEDSONGS"
-    };
+    const newSong = songFactorie.body(true);
     
     const response = await supertest(app).post("/recommendations").send(newSong);
     expect(response.status).toBe(201);
@@ -27,10 +25,7 @@ describe("POST /recommendations", () => {
   });
 
   it("should answer with status 400 for invalid params", async () => {
-    const invalidSong = {
-      name: "",
-      youtubeLink: "http://youtube.com"
-    }
+    const invalidSong = songFactorie.body(false);
 
     const response = await supertest(app).post("/recommendations").send(invalidSong);
     expect(response.status).toBe(400);
