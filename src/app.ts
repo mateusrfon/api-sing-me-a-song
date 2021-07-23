@@ -16,5 +16,6 @@ app.get("/recommendations/random", songController.getRandom);
 app.get("/recommendations/top/:amount", songController.getTop);
 
 app.post("/genres", genreController.add);
+app.get("/genres", genreController.get);
 
 export default app;

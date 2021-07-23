@@ -18,3 +18,12 @@ export async function add(req: Request, res: Response) {
         res.sendStatus(500);
     }
 }
+
+export async function get(req: Request, res: Response) {
+    try {
+
+    } catch(err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
+}
