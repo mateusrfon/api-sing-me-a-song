@@ -10,7 +10,7 @@ beforeEach(async () => {
 
 afterAll(() => {
   connection.end();
-})
+});
 
 describe("POST /recommendations", () => {
   it("should answer with status 200 and add song for valid params", async () => {
