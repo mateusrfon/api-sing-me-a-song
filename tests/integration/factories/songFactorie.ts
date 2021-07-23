@@ -16,7 +16,7 @@ export function body(valid: boolean) {
 
 export async function create() {
     const request = await connection.query(`
-    INSERT INTO musics (name, "youtubeLink") VALUES ($1,$2) RETURNING id
-    `, ["Teste", "http://youtube.com/teste"]);
+    INSERT INTO songs (name, "youtubeLink") VALUES ($1,$2) RETURNING id
+    `, ["Teste Song", "http://youtube.com/teste"]);
     return request.rows[0].id;
 }

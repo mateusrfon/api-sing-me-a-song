@@ -5,7 +5,7 @@ import connection from "../../src/database";
 import * as songFactorie from "./factories/songFactorie";
 
 beforeEach(async () => {
-  await connection.query("DELETE FROM musics");
+  await connection.query("DELETE FROM songs");
 });
 
 afterAll(() => {
@@ -25,7 +25,7 @@ describe("POST /recommendations/:id/upvote", () => {
         expect(response.status).toBe(200);
 
         const requestScore = await connection.query(`
-        SELECT score FROM musics WHERE id = $1
+        SELECT score FROM songs WHERE id = $1
         `, [id]);
         expect(requestScore.rows[0]?.score).toBe(1);
     });
@@ -44,7 +44,7 @@ describe("POST /recommendations/:id/downvote", () => {
         expect(response.status).toBe(200);
 
         const requestScore = await connection.query(`
-        SELECT score FROM musics WHERE id = $1
+        SELECT score FROM songs WHERE id = $1
         `, [id]);
         expect(requestScore.rows[0]?.score).toBe(-1);
     });
@@ -52,7 +52,7 @@ describe("POST /recommendations/:id/downvote", () => {
     it("should return status 200 and delete if score equals -5 on request", async () => {
         const { name, youtubeLink } = songFactorie.body(true);
         const newSong = await connection.query(`
-        INSERT INTO musics (name, "youtubeLink", score) VALUES ($1, $2, -5) RETURNING id
+        INSERT INTO songs (name, "youtubeLink", score) VALUES ($1, $2, -5) RETURNING id
         `, [name, youtubeLink]);
         const id = newSong.rows[0]?.id;
 
@@ -60,7 +60,7 @@ describe("POST /recommendations/:id/downvote", () => {
         expect(response.status).toBe(200);
 
         const request = await connection.query(`
-        SELECT * FROM musics WHERE id = $1
+        SELECT * FROM songs WHERE id = $1
         `, [id]);
         expect(request.rows[0]).toBe(undefined);
     })

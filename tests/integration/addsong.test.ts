@@ -5,7 +5,7 @@ import connection from "../../src/database";
 import * as songFactorie from "./factories/songFactorie";
 
 beforeEach(async () => {
-  await connection.query("DELETE FROM musics");
+  await connection.query("DELETE FROM songs");
 });
 
 afterAll(() => {
@@ -19,7 +19,7 @@ describe("POST /recommendations", () => {
     const response = await supertest(app).post("/recommendations").send(newSong);
     expect(response.status).toBe(201);
 
-    const songs = await connection.query("SELECT * FROM musics");
+    const songs = await connection.query("SELECT * FROM songs");
     const song = songs.rows[0]
     expect(song?.name).toBe(newSong.name);
   });
@@ -30,4 +30,12 @@ describe("POST /recommendations", () => {
     const response = await supertest(app).post("/recommendations").send(invalidSong);
     expect(response.status).toBe(400);
   });
+
+  it("should return status 409 for duplicate name", async () => {
+    await songFactorie.create();
+    const song = songFactorie.body(true);
+
+    const response = await supertest(app).post("/recommendations").send(song);
+    expect(response.status).toBe(409);
+  })
 });
