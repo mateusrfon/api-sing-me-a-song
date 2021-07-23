@@ -13,7 +13,7 @@ afterAll(() => {
 });
 
 describe("POST /recommendations", () => {
-  it("should answer with status 200 and add song for valid params", async () => {
+  it("should answer with status 201 and add song for valid params", async () => {
     const newSong = songFactorie.body(true);
     
     const response = await supertest(app).post("/recommendations").send(newSong);

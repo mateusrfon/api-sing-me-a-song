@@ -5,8 +5,8 @@ import { songSchema } from "./schemas";
 
 export async function add(req: Request, res: Response) {
     const song = req.body;
-    const songValidation = songSchema.validate(song);
-    if (songValidation.error) return res.sendStatus(400);
+    const validation = songSchema.validate(song);
+    if (validation.error) return res.sendStatus(400);
 
     const exists = await songService.existsByName(song.name);
     if (exists) return res.sendStatus(409);
