@@ -29,3 +29,11 @@ export async function updateScore(id: number, update: number) {
 export async function remove(id: number) {
     await connection.query(`DELETE FROM songs WHERE id = $1`, [id]);
 }
+
+export async function getByScoreDesc(limit: number) {
+    let query = "SELECT * FROM songs ORDER BY score DESC";
+    if (limit > 0) query = query + ` LIMIT ${limit}`;
+
+    const request = await connection.query(query);
+    return request.rows;
+}

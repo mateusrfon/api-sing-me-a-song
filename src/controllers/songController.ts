@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 
-import connection from "../database"; //temp
 import * as songService from "../services/songService";
 import { songSchema } from "./schemas";
 
@@ -35,43 +34,22 @@ export async function downVote(req: Request, res: Response) {
 
     const score = await songService.vote(id, "down");
 
-    await songService.checkScore(id, score);
+    await songService.validateScore(id, score);
 
     res.sendStatus(200);
 }
 
 export async function getRandom(req: Request, res: Response) {
-    const request = await connection.query(`SELECT * FROM songs ORDER BY score DESC`);
-    const songs = request.rows;
-    if (songs.length === 0) return res.sendStatus(404);
-
-    let filteredSongs;
-
-    if (Math.random() >= 0.3) {
-        const highScore = songs.filter(item => item.score > 10);
-        filteredSongs = highScore;
-    } else {
-        const lowScore = songs.filter(item => item.score <= 10);
-        filteredSongs = lowScore;
-    }
-
-    if (filteredSongs.length > 0) {
-        const randomIndex = Math.floor(Math.random() * filteredSongs.length);
-        res.send(filteredSongs[randomIndex]);
-    } else {
-        const randomIndex = Math.floor(Math.random() * songs.length);
-        res.send(songs[randomIndex]);
-    }
+    const song = await songService.getRandom();
+    if (song === null) return res.sendStatus(404);
+    
+    res.send(song);
 }
 
 export async function getTop(req: Request, res: Response) {
     const amount = parseInt(req.params.amount);
 
-    const request = await connection.query(`
-    SELECT * FROM songs ORDER BY score DESC LIMIT $1
-    `, [amount]);
-
-    const songs = request.rows; //length <= amount
+    const songs = await songService.getTop(amount);
 
     if (songs.length === 0) return res.sendStatus(404);
 
