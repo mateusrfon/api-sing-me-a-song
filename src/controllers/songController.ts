@@ -1,20 +1,15 @@
 import { Request, Response } from "express";
-import Joi from "joi";
 
 import connection from "../database"; //temp
 import * as songService from "../services/songService";
-
-const songSchema = Joi.object({
-    name: Joi.string().required(),
-    youtubeLink: Joi.string()
-});
+import { songSchema } from "./schemas";
 
 export async function add(req: Request, res: Response) {
     const song = req.body;
     const songValidation = songSchema.validate(song);
     if (songValidation.error) return res.sendStatus(400);
 
-    const exists = await songService.exists(song.name);
+    const exists = await songService.existsByName(song.name);
     if (exists) return res.sendStatus(409);
 
     await songService.create(song.name, song.link);
@@ -24,11 +19,10 @@ export async function add(req: Request, res: Response) {
 export async function upVote(req: Request, res: Response) {
     const id = parseInt(req.params.id);
 
-    const request = await connection.query(`SELECT * FROM songs WHERE id = $1`, [id]);
-    const song = request.rows[0];
-    if (!song) return res.sendStatus(404);
+    const exists = await songService.existsById(id);
+    if (!exists) return res.sendStatus(404);
 
-    await connection.query(`UPDATE songs SET score = score + 1 WHERE id = $1`, [id]);
+    await songService.vote(id, "up");
 
     res.sendStatus(200);
 };
@@ -36,16 +30,13 @@ export async function upVote(req: Request, res: Response) {
 export async function downVote(req: Request, res: Response) {
     const id = parseInt(req.params.id);
 
-    const request = await connection.query(`SELECT * FROM songs WHERE id = $1`, [id]);
-    const song = request.rows[0];
-    if (!song) return res.sendStatus(404);
+    const exists = await songService.existsById(id);
+    if (!exists) return res.sendStatus(404);
 
-    if (song.score <= -5) {
-        await connection.query(`DELETE FROM songs WHERE id = $1`, [id]);
-        return res.sendStatus(200);
-    }
+    const score = await songService.vote(id, "down");
 
-    await connection.query(`UPDATE songs SET score = score - 1 WHERE id = $1`, [id]);
+    await songService.checkScore(id, score);
+
     res.sendStatus(200);
 }
 

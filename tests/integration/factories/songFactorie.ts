@@ -17,7 +17,16 @@ export function body(valid: boolean) {
 }
 
 export async function create() {
-    const name = faker.random.word();
+    let name;
+
+    while (true) {
+        name = faker.random.word();
+        const exists = await connection.query(`
+        SELECT * FROM songs WHERE name = $1
+        `, [name]);
+        if (exists.rows[0] === undefined) break;
+    }
+
     const request = await connection.query(`
     INSERT INTO songs (name, "youtubeLink") VALUES ($1,$2) RETURNING id
     `, [name, "http://youtube.com/teste"]);
